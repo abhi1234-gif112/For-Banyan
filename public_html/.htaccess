@@ -1,0 +1,69 @@
+Options -Indexes
+ServerSignature Off
+
+# Protect sensitive config files
+<FilesMatch "(config\.php|db\.php|auth\.php|helpers\.php|cors\.php|\.env|composer\.(json|lock))$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Block direct browser access to cron scripts unless cron_secret is provided
+    RewriteCond %{REQUEST_URI} ^/cron/
+    RewriteCond %{QUERY_STRING} !cron_secret=
+    RewriteCond %{REQUEST_URI} !_cron_base\.php$
+    RewriteRule ^ - [F,L]
+
+    # API routing — strip .php if extension omitted
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^(.+)$ $1.php [L]
+
+    # Report file downloads pass through
+    RewriteCond %{REQUEST_URI} ^/reports/files/
+    RewriteRule ^ - [L]
+
+    # SPA fallback — everything else → React index.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteCond %{REQUEST_URI} !^/cron/
+    RewriteCond %{REQUEST_URI} !^/reports/
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# PHP settings
+<IfModule mod_php.c>
+    php_value upload_max_filesize 20M
+    php_value post_max_size 20M
+    php_value max_execution_time 60
+    php_value memory_limit 256M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 20M
+    php_value post_max_size 20M
+    php_value max_execution_time 60
+    php_value memory_limit 256M
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
