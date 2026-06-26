@@ -1,0 +1,3 @@
+import { createServer } from 'http';import { createApp } from './app.js';import { env } from './config/env.js';import { logger } from './lib/logger.js';import { prisma } from './lib/prisma.js';import { redis } from './lib/redis.js';import { startCron } from './cron/index.js';import { startMonitoringWorker } from './workers/monitoring.worker.js';
+const server=createServer(createApp());const worker=startMonitoringWorker();startCron();server.listen(env.PORT,()=>logger.info('api_started',{port:env.PORT}));
+async function shutdown(){logger.info('shutdown_started');server.close();await worker.close();await redis.quit();await prisma.$disconnect();process.exit(0);}process.on('SIGTERM',shutdown);process.on('SIGINT',shutdown);

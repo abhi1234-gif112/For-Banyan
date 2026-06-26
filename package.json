@@ -1,0 +1,21 @@
+{
+  "name": "nazar",
+  "version": "5.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build -w apps/api && npm run build -w apps/web",
+    "test": "npm run test -w apps/api",
+    "dev": "npm run dev -w apps/api",
+    "start": "npm run start -w apps/api",
+    "postinstall": "npm run prisma:generate -w apps/api"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10"
+  }
+}
