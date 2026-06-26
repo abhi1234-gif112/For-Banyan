@@ -1,0 +1,13 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+enum Role { ADMIN ANALYST VIEWER }
+enum Sentiment { POSITIVE NEUTRAL NEGATIVE }
+enum AlertSeverity { LOW MEDIUM HIGH CRITICAL }
+model User { id String @id @default(cuid()) email String @unique passwordHash String name String role Role @default(ANALYST) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model Individual { id String @id @default(cuid()) name String title String? party String? state String? keywords Keyword[] mentions Mention[] scores Score[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([name]) }
+model Keyword { id String @id @default(cuid()) phrase String individualId String individual Individual @relation(fields:[individualId], references:[id], onDelete:Cascade) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@unique([phrase, individualId]) }
+model Mention { id String @id @default(cuid()) source String sourceUrl String @unique title String content String publishedAt DateTime? sentiment Sentiment @default(NEUTRAL) riskScore Int @default(0) hash String @unique individualId String? individual Individual? @relation(fields:[individualId], references:[id], onDelete:SetNull) alerts Alert[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([source, publishedAt]) @@index([riskScore]) }
+model Alert { id String @id @default(cuid()) title String severity AlertSeverity status String @default("OPEN") mentionId String mention Mention @relation(fields:[mentionId], references:[id], onDelete:Cascade) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([severity,status]) }
+model Score { id String @id @default(cuid()) individualId String individual Individual @relation(fields:[individualId], references:[id], onDelete:Cascade) score Int reasons Json createdAt DateTime @default(now()) @@index([individualId, createdAt]) }
+model Report { id String @id @default(cuid()) title String body Json createdBy String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model JobLog { id String @id @default(cuid()) queue String jobName String status String details Json? createdAt DateTime @default(now()) @@index([queue,status]) }

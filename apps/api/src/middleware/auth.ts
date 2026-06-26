@@ -1,0 +1,5 @@
+import type { NextFunction,Request,Response } from 'express';import jwt from 'jsonwebtoken';import { env } from '../config/env.js';import { AppError } from './error.js';
+export type AuthUser={id:string;email:string;role:'ADMIN'|'ANALYST'|'VIEWER'};declare global{namespace Express{interface Request{user?:AuthUser}}}
+export function signToken(user:AuthUser){return jwt.sign(user,env.JWT_SECRET,{expiresIn:env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn']});}
+export function requireAuth(req:Request,_res:Response,next:NextFunction){const token=req.headers.authorization?.replace('Bearer ','');if(!token)throw new AppError(401,'Authentication required','UNAUTHENTICATED');try{req.user=jwt.verify(token,env.JWT_SECRET) as AuthUser;next();}catch{throw new AppError(401,'Invalid token','INVALID_TOKEN')}}
+export function requireRole(roles:AuthUser['role'][]){return (req:Request,_res:Response,next:NextFunction)=>{if(!req.user||!roles.includes(req.user.role))throw new AppError(403,'Forbidden','FORBIDDEN');next();};}

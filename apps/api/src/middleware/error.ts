@@ -1,0 +1,3 @@
+import type { ErrorRequestHandler } from 'express';import { ZodError } from 'zod';import { logger } from '../lib/logger.js';
+export class AppError extends Error{constructor(public statusCode:number,message:string,public code='APP_ERROR'){super(message)}}
+export const errorHandler:ErrorRequestHandler=(err,req,res,_next)=>{if(err instanceof ZodError)return res.status(400).json({success:false,data:null,error:{code:'VALIDATION_ERROR',message:'Invalid request',issues:err.flatten()},meta:{}});const status=err instanceof AppError?err.statusCode:500;logger.error('request_failed',{err, path:req.path});return res.status(status).json({success:false,data:null,error:{code:err.code ?? 'INTERNAL_ERROR',message:status===500?'Internal server error':err.message},meta:{}})};
