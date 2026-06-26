@@ -8,8 +8,8 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   build: {
-    outDir: '../public_html',
-    emptyOutDir: false,
+    outDir: 'dist',
+    emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {
       output: {
